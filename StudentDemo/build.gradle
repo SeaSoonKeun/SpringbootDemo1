@@ -1,0 +1,53 @@
+plugins {
+    id 'java'
+}
+apply plugin: 'java'
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    compile("org.springframework.boot:spring-boot-starter-web:1.5.10.RELEASE")
+}
+
+test {
+    useJUnitPlatform()
+}
+
+//构建打包的配置
+// java -- jar 可以通过java -jar直接执行
+// web -- war 需要外部有tomcat
+jar {
+    // 遍历依赖，追加到someString上
+    String someString = ''
+    configurations.runtime.each { someString = someString + " lib//" + it.name }
+    // 指定项目清单
+    manifest {
+        // 指定启动类
+        attributes 'Main-Class' : 'com.studentDemo.StudentApp'
+        // 指定依赖
+        attributes 'Class-Path': someString
+    }
+}
+
+// 指定编码类型
+tasks.withType(JavaCompile){
+    options.encoding = "UTF-8"
+}
+
+// 拷贝jar，把依赖都放到build/libs/lib中
+task copyJar(type:Copy){
+    from configurations.runtime
+    into ('build/libs/lib')
+}
+
+// 构建一个自定义任务release，dependsOn表示它依赖两个自任务build和copyJar
+task release(dependsOn: [build, copyJar]){
+
+}
